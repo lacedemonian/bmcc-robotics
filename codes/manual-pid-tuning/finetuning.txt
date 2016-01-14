@@ -1,0 +1,14 @@
+TEST SENSORS PRIOR TO TUNING
+
+1
+Increment Kp until you get a somewhat steady follow
+2
+Decrement down to about half of that Kp
+Increment Kd until you get an even steadier follow
+3
+Finally add in Ki (usually very very small, almost negligible. might need to increment at 0.0001)
+
+Once you have Kp, Ki, Kd values that work for you, find a range between each of those values, and alter the code so you increment at 0.0001,
+then play around with those values until you perfect the values for your needs.
+
+Every robot is different, remember to work with varying base speeds and max speeds to better suit your needs ... for speeds
