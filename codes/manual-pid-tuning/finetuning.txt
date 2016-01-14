@@ -12,3 +12,16 @@ Once you have Kp, Ki, Kd values that work for you, find a range between each of 
 then play around with those values until you perfect the values for your needs.
 
 Every robot is different, remember to work with varying base speeds and max speeds to better suit your needs ... for speeds
+
+SIDE NOTE:
+There are means to automatically tune your robot instead of incrementing at 0.0001.
+Lets say you find a range around the following values after the manual test
+Kp = 0.2 Kd = 0.5 Ki =0.01
+Kp (0.1, 0.3) Kd (0.4, 0.6) Ki (0.001, 0.02)
+
+If you were to automate a code to cycle through every possible value at increment values of 0.0000001,
+keep that value for a few seconds, and record the least amount of error fluctuation as well as it's Kp Ki Kd for that
+instance (essentially minimizing error),
+then you could fine tune your line follow perfectly. Unfortunately this requires a long track. A long and straight track.
+Perhaps a treadmill covered in white paper and a single black line in the middle of it would suffice?
+For our purposes, however, fine tuning manually will have to do.
