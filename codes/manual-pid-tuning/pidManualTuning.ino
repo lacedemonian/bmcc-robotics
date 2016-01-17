@@ -20,15 +20,15 @@ unsigned int sensorValuesA[NUM_SENSORSA];
 int in1 = 4, in3 = 12, in2 = 7, in4 = 13;    // assign IN from H-Bridge to digital pin
 int ENA = 9, ENB = 10;    // assign motors to a pmw pin
 int LED = 3;	// assigns signal LED to pin 3
-int KpIncrement = 34, KiIncrement = 36, KdIncrement = 38;		// assigns increment buttons to pins 34,36,38
+int KpIncrement = 34, KiIncrement = 36, KdIncrement = 38;		// assigns increment buttons to pins 2,13,5
 int incrementChange = 40; // assigns increment changer to pin 40
 int i = 0;
 
 int pos = 0;    // initialized position for PID 
-long proportional = 0;    // initialized proportional for PID
-long derivative = 0;    // initialized derivative for PID
-long lastproportional = 0;    // initialized last proportional for PID
-long integral = 0;    // initialized integral for PID
+int proportional = 0;    // initialized proportional for PID
+int derivative = 0;    // initialized derivative for PID
+int lastproportional = 0;    // initialized last proportional for PID
+int integral = 0;    // initialized integral for PID
 int const setpoint = 2500;    // constant setpoint for PID
 int speedRight;    // variable for the speed of right motor
 int speedLeft;    // variable for the speed of left motor
@@ -78,14 +78,7 @@ void loop()
 void pid() //main line follow code
 {
 	stats(); //stats will print out the Kp, Ki, Kd, and increment values
-	qtrrcA.readCalibrated(sensorValuesA); //read input of outer sensors (0-1000)
-	pos = qtrrc.readLine(sensorValues);	//readLine function returns the position of the robot on the line
-	proportional = pos - setpoint; //proportional is the position with respect to the two most inner sensors (use values ~2000-3000)
-	integral = integral + proportional; //integral adds the proportional to itself every time (area under the curve) as the position oscillates around zero, the integral will balance itself out
-	derivative = proportional - lastproportional; //	derivative will take the slope of the oscillation per cycle
-	error = (proportional*Kp + integral*Ki + derivative*Kd); //error is computed by the sum of the following pid values, each with their own constants
-	lastproportional = proportional; //records the current positon for the next cycle
-
+	calculateError(); //stores error value in error
 
 	if (digitalRead(KpIncrement) == HIGH)
 		Kp += increment[i];
@@ -102,9 +95,33 @@ void pid() //main line follow code
 			i++; //otherwise increment i
 	}
 
-	speedLeft = speedLeftBase - error; //left motor speed relative to base speed minus error
+	assignMotorSpeedPID(error);
+}
 
-	speedRight = speedRightBase + error; //right motor speed relative to base speed plus error
+void stats() //used to display values on an LCD
+{
+	lcd.setCursor(0, 0);
+	lcd.print("p:"); lcd.print(Kp,DEC); lcd.setCursor(9,0);
+	lcd.print("d:"); lcd.print(Kd,DEC); lcd.setCursor(0, 1);
+	lcd.print("i:"); lcd.print(Ki,DEC); lcd.setCursor(9,1);
+	lcd.print(increment[i],DEC);
+}
+
+void calculateError()
+{
+	qtrrcA.readCalibrated(sensorValuesA); //read input of outer sensors (0-1000)
+	pos = qtrrc.readLine(sensorValues);	//readLine function returns the position of the robot on the line
+	proportional = pos - setpoint; //proportional is the position with respect to the two most inner sensors (use values ~2000-3000)
+	integral = integral + proportional; //integral adds the proportional to itself every time (area under the curve) as the position oscillates around zero, the integral will balance itself out
+	derivative = proportional - lastproportional; //	derivative will take the slope of the oscillation per cycle
+	error = (proportional*Kp + integral*Ki + derivative*Kd); //error is computed by the sum of the following pid values, each with their own constants
+	lastproportional = proportional; //records the current positon for the next cycle
+}
+
+void assignMotorSpeedPID(int e)
+{
+	speedLeft = speedLeftBase - e; //left motor speed relative to base speed minus error
+	speedRight = speedRightBase + e; //right motor speed relative to base speed plus error
 
 
 	if (speedRight>max_speed) //used to cap off motor at max speed
@@ -122,14 +139,5 @@ void pid() //main line follow code
 
 	analogWrite(ENA, speedLeft); //finally the motor speeds are assigned to the motors through the H-Bridge
 	analogWrite(ENB, speedRight);
-}
-
-void stats() //used to display values on an LCD
-{
-	lcd.setCursor(0, 0);
-	lcd.print("p:"); lcd.print(Kp); lcd.print(" ");
-	lcd.print("d:"); lcd.print(Kd); lcd.setCursor(0, 1);
-	lcd.print("i:"); lcd.print(Ki); lcd.print(" ");
-	lcd.print(increment[i]);
 }
 
